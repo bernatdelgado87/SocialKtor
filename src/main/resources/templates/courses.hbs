@@ -1,0 +1,113 @@
+{{> header}}
+
+
+
+<h1>Listado Cursos</h1>
+
+<table class="table table-striped table-bordered">
+    <thead>
+    <th>id</th>
+    <th>Titulo Curso</th>
+    <th>Imagen Curso</th>
+    <th>Resumen Curso</th>
+    <th>Dificultad</th>
+    <th>Video Curso</th>
+    <th>Tamaño</th>
+    <th>Tipo de Curso</th>
+
+    <th>
+            <button data-toggle="modal" data-target="#newElementModal" class="btn btn-info" onclick="dropData()">
+                Nuevo Curso
+            </button>
+    </th>
+    </thead>
+
+    {{#courses}}
+        <tr>
+            <td>{{id}}</td>
+            <td><a href="../challenges/?idCourse={{id}}">{{name.es}}</a></td>
+            <td><img src='{{urlAbsolute}}'></td>
+            <td id="editTd{{id}}">
+
+                <a href='deleteCourse/?idCourse={{id}}&idCategory={{category.id}}'>
+                    <button type='button' class='btn btn-danger'>Eliminar Curso</button>
+                </a></td>
+        </tr>
+        </tr>
+
+        <script>
+            var data{{id}} = {name: "{{name.es}}", id: "{{id}}"};
+            var $button = "<button data-toggle='modal' data-target='#newElementModal' class='btn btn-success' data-target='#newElementModal' onclick='editData(data{{id}})'>Modificar Curso</button>";
+            $("#editTd{{id}}").append($button);
+
+            function editData(obj) {
+                document.getElementById("name_es").value = obj.name;
+                document.getElementById("id_course").value = obj.id;
+            }
+
+            function dropData() {
+                document.getElementById("name_es").value = "";
+                document.getElementById("id_course").value = "";
+                document.getElementById("warning_es").value = "";
+                document.getElementById("file1").value = "";
+            }
+
+        </script>
+    
+    
+    {{/courses}}
+
+</table>
+
+
+
+<!-- Modal -->
+
+<div class="modal fade" id="newElementModal" tabindex="-1" role="dialog" aria-labelledby="Crear Elemento"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Nueva Curso</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="createCourseAction" method="POST" enctype="multipart/form-data">
+                    <label>ID Curso: AUTO-ASIGNADO </label>
+                    <input type="hidden" id="id_course" name="id_course"/>
+                    <input type="hidden" id="id_category" name="id_category"/>
+                    <br/>
+                    <label>Titulo Curso: </label>
+
+                    <input type="text" name="name_es" id="name_es"/>
+
+                    <br/>
+
+                    <label>Warning Curso: </label>
+                    <textarea rows="3" cols="50" name="warning_es"></textarea>
+                    <br />
+
+                    <label>Imagen: </label>
+                    <br/>
+                    <input type="file" name="file1" id="file1">
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const idCategory = urlParams.get('idCategory');
+    document.getElementById("id_category").value = idCategory;
+</script>
+
+{{> footer}}

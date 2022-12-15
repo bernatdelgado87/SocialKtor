@@ -1,0 +1,133 @@
+{{> header}}
+
+
+
+<h1>Listado Ejercicios</h1>
+
+<table class="table table-striped table-bordered">
+    <thead>
+    <th>id</th>
+    <th>Titulo Ejercicio</th>
+    <th>Imagen Ejercicio</th>
+    <th>Borrador</th>
+    <th>Descripción</th>
+    <th>Video Ejercicio</th>
+    <th>
+        <button data-toggle="modal" data-target="#newElementModal" class="btn btn-info" onclick="dropData()">
+            Nuevo Ejercicio
+        </button>
+    </th>
+    </thead>
+
+    {{#exercises}}
+        <tr>
+            <td>{{id}}</td>
+            <td><a href="../exercises/?idExercise={{id}}">{{name.es}}</a></td>
+            <td><img src='{{urlAbsolute}}'></td>
+            <td>{{isDraft}}</td>
+            <td>{{description.es}}</td>
+            <td><a href="{{videoEsUrlAbsolute}}">{{videoEsUrlRelative}}</a></td>
+            <td id="editTd{{id}}">
+
+                <a href='deleteExercise/?idExercise={{id}}&idChallenge={{challengeId}}'>
+                    <button type='button' class='btn btn-danger'>Eliminar Ejercicio</button>
+                </a></td>
+        </tr>
+        </tr>
+
+        <script>
+            var data{{id}} = {name: "{{name.es}}", id: "{{id}}", requirement: "{{requiredExercise.id}}"};
+            var $button = "<button data-toggle='modal' data-target='#newElementModal' class='btn btn-success' data-target='#newElementModal' onclick='editData(data{{id}})'>Modificar Ejercicio</button>";
+            $("#editTd{{id}}").append($button);
+
+            function editData(obj) {
+                document.getElementById("name_es").value = obj.name;
+                document.getElementById("id_exercise").value = obj.id;
+                document.getElementById('requiredExerciseId').value = obj.requirement
+
+            }
+
+            function dropData() {
+                document.getElementById("name_es").value = "";
+                document.getElementById("id_exercise").value = "";
+                document.getElementById("warning_es").value = "";
+                document.getElementById("file1").value = "";
+            }
+
+        </script>
+
+
+    {{/exercises}}
+
+</table>
+
+
+
+<!-- Modal -->
+
+<div class="modal fade" id="newElementModal" tabindex="-1" role="dialog" aria-labelledby="Crear Elemento"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Nueva Ejercicio</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="createExerciseAction" method="POST" enctype="multipart/form-data">
+                    <label>ID Ejercicio: AUTO-ASIGNADO </label>
+                    <input type="hidden" id="id_exercise" name="id_exercise"/>
+                    <input type="hidden" id="id_challenge" name="id_challenge"/>
+                    <br/>
+                    <label>Titulo Ejercicio: </label>
+                    <input type="text" name="name_es" id="name_es"/>
+
+
+                    <label>Descripción: </label>
+                    <input type="text" name="description" id="description"/>
+
+                    <label>Instrucciones: </label>
+                    <input type="text" name="instructions" id="instructions"/>
+
+                    <label>Requisito: </label>
+                    <select name="requiredExerciseId" id="requiredExerciseId">
+                        <option value=""></option>
+
+                        {{#exercises}}
+                        <option value={{id}}>{{name.es}}</option>
+{{/exercises}}
+                    </select>
+                    <br/>
+
+                    <label>Warning Ejercicio: </label>
+                    <textarea rows="3" cols="50" name="warning_es"></textarea>
+                    <br />
+
+                    <label>Imagen: </label>
+                    <br/>
+                    <input type="file" name="file1" id="file1">
+
+                    <label>Video: </label>
+                    <br/>
+                    <input type="file" name="video1" id="video1">
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const idChallenge = urlParams.get('idChallenge');
+    document.getElementById("id_challenge").value = idChallenge;
+</script>
+
+{{> footer}}
