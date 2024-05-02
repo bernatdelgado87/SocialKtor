@@ -12,10 +12,4 @@ fun Route.frontendRoute() {
             call.respond(MustacheContent("global.css", null))
         }
     }
-    route("/admin") {
-        categoryRoute()
-        exerciseRoute()
-        courseRoute()
-        challengeRoute()
-    }
 }

@@ -13,7 +13,6 @@ import java.util.*
 
 fun Application.configureRouting() {
 
-
     routing {
         authenticate(SocialAuth.AUTH_BASIC) {
             get("/") {
@@ -23,5 +22,6 @@ fun Application.configureRouting() {
         socialRoute()
         userRoute()
         frontendRoute()
+
     }
 }

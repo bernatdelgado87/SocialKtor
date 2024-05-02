@@ -4,7 +4,6 @@ import com.example.data.entity.Comments
 import com.example.data.entity.LikesTable
 import com.example.data.entity.Questions
 import com.example.data.entity.UserTable
-import com.example.data.entity.course.*
 import com.example.data.entity.social.MultimediaPostTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -34,15 +33,7 @@ class DataBaseFactory(private val db: Database) {
                 Comments,
                 MultimediaPostTable,
                 LikesTable,
-                UserTable,
-                TraitTable,
-                ExerciseTable,
-                CategoriesTable,
-                CoursesTable,
-                CourseTraitsTable,
-                ProgressChallengeTable,
-                ProgressCourseTable,
-                ProgressExerciseTable
+                UserTable
             )
             addLogger(StdOutSqlLogger)
         }

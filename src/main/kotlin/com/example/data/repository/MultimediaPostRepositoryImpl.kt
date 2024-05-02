@@ -25,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.io.InputStream
@@ -44,8 +45,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         return flowOf(
             MultimediaFeed(
                 multimediaModelList,
-                start,
-                end
+                true //fixme!! control pagination
             )
         )
     }
@@ -89,8 +89,21 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
     override fun publishMultimediaPost(applicationCall: ApplicationCall): Flow<MultimediaModel> =
         publishPost(applicationCall)
 
-    override fun getFeed(idUser: String): Flow<MultimediaFeed> {
-        TODO("Not yet implemented")
+    override suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed> {
+        val multimediaModelList = transaction {
+            MultimediaPostTable
+                .selectAll()
+                .limit(n, offset)
+                .map {
+                    PostMapper.toModel(it)
+                }.toList()
+        }
+        return flowOf(
+            MultimediaFeed(
+                multimediaModelList,
+                true  //fixme!! control pagination
+            )
+        )
     }
 
     private fun publishPost(applicationCall: ApplicationCall): Flow<MultimediaModel> = runBlocking {
@@ -99,11 +112,13 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
             lateinit var inputStream: InputStream
             var userId: Int = -1
             var description = ""
+            var extension = ""
 
             multipart.forEachPart { part ->
                 // if part is a file (could be form item)
                 if (part is PartData.FileItem) {
                     inputStream = part.streamProvider()
+                    extension = part.originalFileName?.substringAfter(".").orEmpty()
                     //file = getFileFromMultipart(part)
                 }
                 if (part is PartData.FormItem) {
@@ -115,10 +130,10 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                 }
             }
 
-            val nameInServer = "social/userId/" + getTimeMillis() + ".mp4"
+            val nameInServer = "social/userId/" + getTimeMillis() + ".$extension"
             val initialState = "estado inicial"
 
-            val result = Aws3Client().s3client.putObject(
+            val result = Aws3Client(applicationCall.application).s3client.putObject(
                 PutObjectRequest(
                     Bucket.bucket,
                     nameInServer,

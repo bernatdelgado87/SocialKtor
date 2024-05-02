@@ -3,10 +3,10 @@ package com.example.presentation.routes
 import com.example.data.application.executor.JobCoroutine
 import com.example.data.repository.LikeRepositoryImpl
 import com.example.data.repository.MultimediaPostRepositoryImpl
+import com.example.domain.repository.MultimediaPostRepository
 import com.example.domain.usecase.GetAllPostsFromUserUseCase
 import com.example.domain.usecase.GetDetailPostUseCase
 import com.example.domain.usecase.LikePostUseCase
-import com.example.domain.usecase.UploadUseCase
 import com.example.presentation.entity.LikeDTO
 import io.ktor.application.*
 import io.ktor.request.*
@@ -30,12 +30,18 @@ fun Route.socialRoute() {
     route("/social") {
         post("upload/") {
             //     val data = call.receive<MultimediaModel>()
-            val uploadUseCase =
-                UploadUseCase(
-                    MultimediaPostRepositoryImpl(),
-                    JobCoroutine()
-                )
-            uploadUseCase(UploadUseCase.Input(call)).collect() {
+            MultimediaPostRepositoryImpl().publishMultimediaPost(call).collect {
+                call.respond(it)
+            }
+        }
+
+        get("/feed") {
+            val LIMIT = 20
+            val n: String? = call.request.queryParameters["n"]
+            val offset: String?  = call.request.queryParameters["offset"]
+
+            val repository: MultimediaPostRepository = MultimediaPostRepositoryImpl()
+            repository.getFeed(n?.toInt() ?: LIMIT, offset?.toLong() ?: 0).collect {
                 call.respond(it)
             }
         }

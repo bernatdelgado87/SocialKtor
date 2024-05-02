@@ -13,6 +13,6 @@ interface MultimediaPostRepository {
 
     fun publishMultimediaPost(applicationCall: ApplicationCall): Flow<MultimediaModel>
 
-    fun getFeed(idUser: String): Flow<MultimediaFeed>
+    suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed>
 
 }
