@@ -11,20 +11,39 @@ import com.example.domain.usecase.LikePostUseCase
 import com.example.presentation.entity.LikeDTO
 import io.ktor.application.*
 import io.ktor.auth.*
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.flow.collect
+import java.io.InputStream
 
 fun Route.socialRoute() {
 
     authenticate(AuthType.USER_TYPE.name) {
         route("/social") {
             post("/upload") {
-                val userLogged = call.principal<UserIdPrincipal>()!!.name
+                val multipart = call.receiveMultipart()
+                val user = call.principal<UserIdPrincipal>()!!.name
 
-                //     val data = call.receive<MultimediaModel>()
-                MultimediaPostRepositoryImpl().publishMultimediaPost(call).collect {
+                lateinit var inputStream: InputStream
+                var description = ""
+                var extension = ""
+
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        inputStream = part.streamProvider()
+                        extension = part.originalFileName?.substringAfter(".").orEmpty()
+                    }
+
+                    if (part is PartData.FormItem) {
+                        if (part.name.equals("description")) {
+                            description = part.value
+                        }
+                    }
+                }
+
+                MultimediaPostRepositoryImpl().publishMultimediaPost(user.toInt(), inputStream, extension, description, call.application).collect {
                     call.respond(it)
                 }
             }

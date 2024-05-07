@@ -87,9 +87,6 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         return flowOf(result)
     }
 
-    override fun publishMultimediaPost(applicationCall: ApplicationCall): Flow<MultimediaModel> =
-        publishPost(applicationCall)
-
     override suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed> {
         val multimediaModelList = transaction {
             MultimediaPostTable
@@ -108,34 +105,20 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         )
     }
 
-    private fun publishPost(applicationCall: ApplicationCall): Flow<MultimediaModel> = runBlocking {
+    override fun publishMultimediaPost(
+        userId: Int,
+        inputStream: InputStream,
+        extension: String,
+        description: String,
+        application: Application
+    ): Flow<MultimediaModel> = runBlocking {
         withContext(Dispatchers.IO) {
-            val multipart = applicationCall.receiveMultipart()
-            lateinit var inputStream: InputStream
-            var userId: Int = -1
-            var description = ""
-            var extension = ""
 
-            multipart.forEachPart { part ->
-                // if part is a file (could be form item)
-                if (part is PartData.FileItem) {
-                    inputStream = part.streamProvider()
-                    extension = part.originalFileName?.substringAfter(".").orEmpty()
-                    //file = getFileFromMultipart(part)
-                }
-                if (part is PartData.FormItem) {
-                    if (part.name.equals("userId")) {
-                        userId = part.value.toInt()
-                    } else if (part.name.equals("description")) {
-                        description = part.value
-                    }
-                }
-            }
 
             val nameInServer = "social/userId/" + getTimeMillis() + ".$extension"
             val initialState = "estado inicial"
 
-            val result = Aws3Client(applicationCall.application).s3client.putObject(
+            val result = Aws3Client(application).s3client.putObject(
                 PutObjectRequest(
                     Bucket.bucket,
                     nameInServer,
@@ -150,7 +133,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                         it[url] = nameInServer
                         it[state] = initialState
                         it[MultimediaPostTable.description] = description
-                        it[MultimediaPostTable.userRef] = userId!!
+                        it[MultimediaPostTable.userRef] = userId
                         it[numberOfLikes] = 0
                         it[createTime] = DateTime.now()
                     }

@@ -4,6 +4,7 @@ import com.example.domain.model.MultimediaFeed
 import com.example.domain.model.MultimediaModel
 import io.ktor.application.*
 import kotlinx.coroutines.flow.Flow
+import java.io.InputStream
 
 interface MultimediaPostRepository {
 
@@ -11,7 +12,13 @@ interface MultimediaPostRepository {
 
     fun getDetailPost(idPost: Int): Flow<MultimediaModel>
 
-    fun publishMultimediaPost(applicationCall: ApplicationCall): Flow<MultimediaModel>
+    fun publishMultimediaPost(
+        userId: Int,
+        inputStream: InputStream,
+        extension: String,
+        description: String,
+        application: Application
+    ): Flow<MultimediaModel>
 
     suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed>
 
