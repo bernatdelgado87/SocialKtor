@@ -14,11 +14,6 @@ import java.util.*
 fun Application.configureRouting() {
 
     routing {
-        authenticate(SocialAuth.AUTH_BASIC) {
-            get("/") {
-                call.respondText("Hello World!")
-            }
-        }
         socialRoute()
         userRoute()
         frontendRoute()

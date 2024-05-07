@@ -8,12 +8,10 @@ import org.jetbrains.exposed.sql.jodatime.datetime
 private const val TABLE_NAME = "user_registered"
 
 object UserTable : IntIdTable(name = TABLE_NAME) {
-    val name = text("name")
+    val name = text("name").uniqueIndex()
     val email = varchar("email", 255).uniqueIndex()
     val password = text("password")
-    val dogName = text("dog_name")
-    val genre = text("genre")
-    val breed = integer("breed")
+    val apikey = text("apikey").uniqueIndex()
     val createTime = datetime("create_time")
 }
 
@@ -22,10 +20,8 @@ class UserMapper() {
         fun toModel(row: ResultRow): UserModel = UserModel(
             id = row[UserTable.id].value,
             name = row[UserTable.name],
-            dogName = row[UserTable.dogName],
-            genre = row[UserTable.genre],
-            breed = row[UserTable.breed],
             email = row[UserTable.email],
+            apikey = row[UserTable.apikey],
             password = row[UserTable.password]
         )
     }

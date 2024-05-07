@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -93,6 +94,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         val multimediaModelList = transaction {
             MultimediaPostTable
                 .selectAll()
+                .orderBy(MultimediaPostTable.createTime to SortOrder.DESC)
                 .limit(n, offset)
                 .map {
                     PostMapper.toModel(it)

@@ -3,6 +3,6 @@ package com.example.presentation.entity
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserDTO (
-    val username: String,
+data class LoginDTO (
+    val email: String,
     val password: String)

@@ -1,57 +1,114 @@
 package com.example.application.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import com.example.application.plugins.SocialAuth.AUTH_BASIC
-import com.example.application.plugins.SocialAuth.AUTH_FORM
-import com.example.application.plugins.SocialAuth.AUTH_JWT_TOKEN
-import com.example.application.plugins.SocialAuth.USERNAME_JWT_TOKEN
+import com.example.data.repository.RegisterLoginRepositoryImpl
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.auth.jwt.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
+import kotlinx.coroutines.flow.firstOrNull
 
-object SocialAuth {
-    const val AUTH_FORM = "auth-form"
-    const val AUTH_BASIC = "auth-basic"
-    const val AUTH_JWT_TOKEN = "auth-jwt"
+enum class AuthType {
+    USER_TYPE,
+    ADMIN_TYPE
+}
 
-    const val USERNAME_JWT_TOKEN = "username"
+class CustomAuthenticationProvider internal constructor(config: Configuration) : AuthenticationProvider(config) {
 
+    internal val authToken: (ApplicationCall) -> String? = config.authToken
+    internal val authenticationFunction = config.authenticationFunction
+
+    //Configuration
+    class Configuration internal constructor(name: String?) : AuthenticationProvider.Configuration(name) {
+
+        internal var authenticationFunction: AuthenticationFunction<String> = {
+            throw NotImplementedError(
+                "auth validate function is not specified. Use CustomAuth { validate { ... } } to fix."
+            )
+        }
+
+        internal var authToken: (ApplicationCall) -> String? = { call -> call.request.header("auth-token") }
+
+        internal fun build() = CustomAuthenticationProvider(this)
+
+        internal fun validate(body: AuthenticationFunction<String>) {
+            authenticationFunction = body
+        }
+    }
+}
+
+suspend fun buildUserContext(creds: String, admin: Boolean): UserIdPrincipal? {
+    if (admin) {
+        return if (creds == "token") {
+            UserIdPrincipal(creds)
+        } else {
+            null
+        }
+    } else {
+        val user = RegisterLoginRepositoryImpl().authWithApiKey(creds).firstOrNull()
+        return user?.let {
+            UserIdPrincipal(it.id.toString())
+        }
+    }
+    return null
+}
+
+fun Authentication.Configuration.userAuth(
+    name: String? = null,
+    configure: CustomAuthenticationProvider.Configuration.() -> Unit,
+) {
+    configureCustomAuth(this, name, configure)
+}
+
+fun Authentication.Configuration.adminAuth(
+    name: String? = null,
+    configure: CustomAuthenticationProvider.Configuration.() -> Unit,
+) {
+    configureCustomAuth(this, name, configure)
+}
+
+private fun configureCustomAuth(
+    auth: Authentication.Configuration, name: String? = null,
+    configure: CustomAuthenticationProvider.Configuration.() -> Unit
+) {
+    val provider = CustomAuthenticationProvider.Configuration(name).apply(configure).build()
+    val authenticate = provider.authenticationFunction
+    provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
+        val credentials = call.request.getAuthenticationCredentials(provider)
+        val principal = credentials?.let { authenticate(call, it) }
+        val cause = when {
+            credentials == null -> AuthenticationFailedCause.NoCredentials
+            principal == null -> AuthenticationFailedCause.InvalidCredentials
+            else -> null
+        }
+        if (cause != null) {
+            context.challenge("Invalid Credentials", cause) {
+                call.respond(HttpStatusCode.Unauthorized, "Invalid Credentials")
+                it.complete()
+            }
+        }
+        if (principal != null) {
+            context.principal(principal)
+        }
+    }
+    auth.register(provider)
+}
+
+fun ApplicationRequest.getAuthenticationCredentials(provider: CustomAuthenticationProvider): String? {
+    val token = provider.authToken(call)
+    return token
 }
 
 fun Application.configureAuthentication() {
     install(Authentication) {
-        basic(AUTH_BASIC) {
-            validate { body ->
-                if (body.name == "jetbrains" && body.password == "foobar") {
-                    UserIdPrincipal(body.name)
-                } else {
-                    null
-                }
+        userAuth(AuthType.USER_TYPE.name) {
+            validate { creds ->
+                buildUserContext(creds, false)
             }
         }
-        form(AUTH_FORM) {
-            // Configure form authentication
-        }
-        jwt(AUTH_JWT_TOKEN) {
-            val secret = environment.config.property("jwt.secret").getString()
-            val issuer = environment.config.property("jwt.issuer").getString()
-            val audience = environment.config.property("jwt.audience").getString()
-            val myRealm = environment.config.property("jwt.realm").getString()
-
-            realm = myRealm
-            verifier(
-                JWT
-                .require(Algorithm.HMAC256(secret))
-                .withAudience(audience)
-                .withIssuer(issuer)
-                .build())
-            validate { credential ->
-                if (credential.payload.getClaim(USERNAME_JWT_TOKEN).asString() != "") {
-                    JWTPrincipal(credential.payload)
-                } else {
-                    null
-                }
+        adminAuth(AuthType.ADMIN_TYPE.name) {
+            validate { creds ->
+                buildUserContext(creds, true)
             }
         }
     }

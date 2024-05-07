@@ -1,5 +1,8 @@
 package com.example.domain.model
 
-sealed class Exceptions {
-    object LoginIncorrectException: Throwable()
+import io.ktor.http.*
+
+sealed class ApiException(message: String): Exception(message) {
+    object LoginIncorrectException: ApiException("Email or password incorrect")
+    object ApiIncorrectException: ApiException("Apikey not valid")
 }
