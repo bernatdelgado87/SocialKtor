@@ -2,7 +2,7 @@ package com.example.presentation.routes
 
 import com.example.application.plugins.AuthType
 import com.example.data.application.executor.JobCoroutine
-import com.example.data.repository.LikeRepositoryImpl
+import com.example.data.repository.LikeAndCommentsRepositoryImpl
 import com.example.data.repository.MultimediaPostRepositoryImpl
 import com.example.domain.repository.MultimediaPostRepository
 import com.example.domain.usecase.GetAllPostsFromUserUseCase
@@ -43,7 +43,13 @@ fun Route.socialRoute() {
                     }
                 }
 
-                MultimediaPostRepositoryImpl().publishMultimediaPost(user.toInt(), inputStream, extension, description, call.application).collect {
+                MultimediaPostRepositoryImpl().publishMultimediaPost(
+                    user.toInt(),
+                    inputStream,
+                    extension,
+                    description,
+                    call.application
+                ).collect {
                     call.respond(it)
                 }
             }
@@ -88,15 +94,14 @@ fun Route.socialRoute() {
                     val userLogged = call.principal<UserIdPrincipal>()!!.name
                     val likePostUseCase =
                         LikePostUseCase(
-                            LikeRepositoryImpl(),
+                            LikeAndCommentsRepositoryImpl(),
                             JobCoroutine()
                         )
                     val data = call.receive<LikeDTO>()
 
-                    val userId = data.userId
                     val postId = data.postReference
 
-                    likePostUseCase(LikePostUseCase.Input(userId, postId)).collect() {
+                    likePostUseCase(LikePostUseCase.Input(userLogged.toInt(), postId)).collect() {
                         call.respond(it)
                     }
                 }
@@ -104,20 +109,7 @@ fun Route.socialRoute() {
 
             route("/follow") {
                 post("/") {
-                    val userLogged = call.principal<UserIdPrincipal>()!!.name
-                    val likePostUseCase =
-                        LikePostUseCase(
-                            LikeRepositoryImpl(),
-                            JobCoroutine()
-                        )
-                    val data = call.receive<LikeDTO>()
-
-                    val userId = data.userId
-                    val postId = data.postReference
-
-                    likePostUseCase(LikePostUseCase.Input(userId, postId)).collect() {
-                        call.respond(it)
-                    }
+                    call.respond("Pending implementation")
                 }
             }
         }
