@@ -5,6 +5,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.example.data.entity.LikeMapper
 import com.example.data.entity.LikesTable
+import com.example.data.entity.UserTable
+import com.example.data.entity.mapper.PostDetailMapper
 import com.example.data.entity.mapper.PostMapper
 import com.example.data.entity.social.MultimediaPostTable
 import com.example.domain.commons.aws.Aws3Client
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -37,6 +40,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
     override fun getAllPostsFromUser(userId: Int, start: Int, end: Long): Flow<MultimediaFeed> {
         val multimediaModelList = transaction {
             MultimediaPostTable
+                .leftJoin(UserTable)
                 .select { MultimediaPostTable.userRef eq userId }
                 .limit(start, end)
                 .map {
@@ -52,44 +56,22 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
     }
 
     override fun getDetailPost(idPost: Int): Flow<MultimediaModel> {
-        var multimediaModel: MultimediaModel?
-        val likeList = mutableListOf<LikeSimplifiedModel>()
-
-        val likesResult = transaction {
+        //todo pending test
+        val transaction = transaction {
             MultimediaPostTable
-                .leftJoin(LikesTable)
+                .leftJoin(UserTable)
                 .select { MultimediaPostTable.id eq idPost }
-                .map {
-                    LikeMapper.toModel(it)
-                }.toList()
-        }
-        if (likesResult.isEmpty()) {
-            return flowOf(MultimediaModel())
-        }
-        multimediaModel = likesResult.get(0).multimediaModel
-        for (item in likesResult) {
-            likeList.add(LikeSimplifiedModel(item.userId, item.postReference))
-        }
+                .groupBy({ it [MultimediaPostTable.id] })
+                .toList().first()
+            }
 
-
-        val result = if (likeList != null && !likeList.isEmpty() && multimediaModel != null) {
-            MultimediaModel(
-                userId = multimediaModel!!.userId,
-                description = multimediaModel!!.description,
-                relativeUrl = multimediaModel!!.relativeUrl,
-                numberOfLikes = multimediaModel!!.numberOfLikes,
-                likes = likeList
-            )
-        } else {
-            MultimediaModel()
-        }
-
-        return flowOf(result)
+        return flowOf(PostDetailMapper.toModel(transaction.second.first()))
     }
 
     override suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed> {
         val multimediaModelList = transaction {
             MultimediaPostTable
+                .leftJoin(UserTable)
                 .selectAll()
                 .orderBy(MultimediaPostTable.createTime to SortOrder.DESC)
                 .limit(n, offset)
@@ -135,6 +117,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                         it[MultimediaPostTable.description] = description
                         it[MultimediaPostTable.userRef] = userId
                         it[numberOfLikes] = 0
+                        it[numberOfComments] = 0
                         it[createTime] = DateTime.now()
                     }
                 }
@@ -144,8 +127,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                 emit(
                     MultimediaModel(
                         relativeUrl = nameInServer,
-                        description = description,
-                        userId = userId
+                        description = description
                     )
                 )
             }

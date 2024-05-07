@@ -3,8 +3,9 @@ package com.example.domain.repository
 import com.example.domain.model.LikeModel
 import kotlinx.coroutines.flow.Flow
 
-interface LikeRepository {
+interface LikeAndCommentsRepository {
 
-    fun publishLike(userId: String, postId: Int): Flow<LikeModel>
+    fun publishLike(userId: Int, postId: Int): Flow<LikeModel>
+    fun publishComment(userId: Int, postId: Int, comment: String): Flow<LikeModel>
 
 }

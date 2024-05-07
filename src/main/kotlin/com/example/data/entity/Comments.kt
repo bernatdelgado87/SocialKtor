@@ -9,7 +9,6 @@ object Comments : IntIdTable(name = "comment") {
     val content = text("content")
     val createTime = datetime("create_time")
 
-    val questionID = integer("question_id")
-        .references(Questions.id, onDelete = ReferenceOption.NO_ACTION)
-
+    val questionID = integer("comment_response_id")
+        .references(id, onDelete = ReferenceOption.CASCADE)
 }

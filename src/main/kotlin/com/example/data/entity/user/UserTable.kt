@@ -11,6 +11,7 @@ object UserTable : IntIdTable(name = TABLE_NAME) {
     val name = text("name").uniqueIndex()
     val email = varchar("email", 255).uniqueIndex()
     val password = text("password")
+    val profileImage = text("profile_image").nullable()
     val apikey = text("apikey").uniqueIndex()
     val createTime = datetime("create_time")
 }
@@ -19,6 +20,7 @@ class UserMapper() {
     companion object {
         fun toModel(row: ResultRow): UserModel = UserModel(
             id = row[UserTable.id].value,
+            profileImage = row[UserTable.profileImage],
             name = row[UserTable.name],
             email = row[UserTable.email],
             apikey = row[UserTable.apikey],

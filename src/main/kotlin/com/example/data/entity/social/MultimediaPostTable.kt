@@ -11,9 +11,8 @@ object MultimediaPostTable : IntIdTable(name = TABLE_NAME) {
     val url = text("url")
     val state = text("state")
     val description = text("description")
-
-    //todo onDelete=cascade!!!
-    val userRef = integer("user_ref").references(UserTable.id, onDelete = ReferenceOption.NO_ACTION)
-    val numberOfLikes = integer("likes")
+    val userRef = integer("user_ref").references(UserTable.id, onDelete = ReferenceOption.CASCADE)
+    val numberOfLikes = integer("total_likes")
+    val numberOfComments = integer("total_comments")
     val createTime = datetime("create_time")
 }

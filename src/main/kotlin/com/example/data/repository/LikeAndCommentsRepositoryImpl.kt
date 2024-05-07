@@ -3,7 +3,7 @@ package com.example.data.repository
 import com.example.data.entity.LikesTable
 import com.example.data.entity.social.MultimediaPostTable
 import com.example.domain.model.LikeModel
-import com.example.domain.repository.LikeRepository
+import com.example.domain.repository.LikeAndCommentsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.exposed.sql.insert
@@ -13,9 +13,9 @@ import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 
 
-class LikeRepositoryImpl : LikeRepository {
+class LikeAndCommentsRepositoryImpl : LikeAndCommentsRepository {
 
-    override fun publishLike(userIdParam: String, postIdParam: Int): Flow<LikeModel> {
+    override fun publishLike(userIdParam: Int, postIdParam: Int): Flow<LikeModel> {
         transaction {
             LikesTable.insert {
                 it[userId] = userIdParam
@@ -32,6 +32,10 @@ class LikeRepositoryImpl : LikeRepository {
         return flowOf(
             LikeModel(userIdParam, postIdParam)
         )
+    }
+
+    override fun publishComment(userId: Int, postId: Int, comment: String): Flow<LikeModel> {
+        TODO("Not yet implemented")
     }
 
 
