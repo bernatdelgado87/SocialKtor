@@ -26,7 +26,7 @@ class LikeMapper() {
                 user = UserModel(
                     id = row[MultimediaPostTable.userRef],
                     name = row[UserTable.name],
-                    profileImage = row [ UserTable.profileImage],
+                    relativeUrlImageProfile = row [ UserTable.profileImage],
                 ),
                 description = row[MultimediaPostTable.description],
                 relativeUrl = row[MultimediaPostTable.url],

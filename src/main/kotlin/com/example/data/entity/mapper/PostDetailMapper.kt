@@ -17,7 +17,7 @@ class PostDetailMapper() {
             user = UserModel(
                 id = row[MultimediaPostTable.userRef],
                 name = row[UserTable.name],
-                profileImage = row[UserTable.profileImage],
+                relativeUrlImageProfile = row[UserTable.profileImage],
             ),
             likes = listOf(
                 LikeSimplifiedModel(

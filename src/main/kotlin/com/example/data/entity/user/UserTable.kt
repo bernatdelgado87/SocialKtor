@@ -20,7 +20,7 @@ class UserMapper() {
     companion object {
         fun toModel(row: ResultRow): UserModel = UserModel(
             id = row[UserTable.id].value,
-            profileImage = row[UserTable.profileImage],
+            relativeUrlImageProfile = row[UserTable.profileImage],
             name = row[UserTable.name],
             email = row[UserTable.email],
             apikey = row[UserTable.apikey],

@@ -97,8 +97,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         withContext(Dispatchers.IO) {
 
 
-            val nameInServer = "social/userId/" + getTimeMillis() + ".$extension"
-            val initialState = "estado inicial"
+            val nameInServer = "social/$userId/" + getTimeMillis() + ".$extension"
 
             val result = Aws3Client(application).s3client.putObject(
                 PutObjectRequest(
@@ -113,7 +112,6 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                 transaction {
                     MultimediaPostTable.insert {
                         it[url] = nameInServer
-                        it[state] = initialState
                         it[MultimediaPostTable.description] = description
                         it[MultimediaPostTable.userRef] = userId
                         it[numberOfLikes] = 0

@@ -16,7 +16,7 @@ class PostMapper() {
             user = UserModel(
                 id = row[MultimediaPostTable.userRef],
                 name = row[UserTable.name],
-                profileImage = row[UserTable.profileImage],
+                relativeUrlImageProfile = row[UserTable.profileImage],
             ),
             numberOfLikes = row[MultimediaPostTable.numberOfLikes],
             numberOfComments = row[MultimediaPostTable.numberOfComments]
