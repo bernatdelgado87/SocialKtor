@@ -13,4 +13,6 @@ data class MultimediaModel (
         Bucket.AWSUrl + relativeUrl} else null,
     val numberOfLikes: Int? = null,
     val numberOfComments: Int? = null,
-    val likes: List<LikeSimplifiedModel>? = null)
+    val likes: List<LikeSimplifiedModel>? = null,
+    val hasLiked: Boolean = false
+)

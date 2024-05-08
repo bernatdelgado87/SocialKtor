@@ -3,11 +3,16 @@ package com.example.domain.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Comment (
+data class CommentWrapperResponse(
+    val imageUrl: String,
+    val comments: List<CommentModel>
+)
+
+@Serializable
+data class CommentModel (
     val id: Int,
     val content: String,
     val createTime: String,
-
-    val questionID: Int?,
-    val questionObject: Question? = null
+    val user: UserModel,
+    val commentReferent: Int? = null
         )

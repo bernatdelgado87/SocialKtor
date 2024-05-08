@@ -26,11 +26,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.io.InputStream
@@ -56,7 +53,7 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
         )
     }
 
-    override suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed> {
+    override suspend fun getFeed(userId: Int, n: Int, offset: Long): Flow<MultimediaFeed> {
         val multimediaModelList = transaction {
             MultimediaPostTable
                 .leftJoin(UserTable)
@@ -64,7 +61,11 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                 .orderBy(MultimediaPostTable.createTime to SortOrder.DESC)
                 .limit(n, offset)
                 .map {
-                    PostMapper.toModel(it)
+                    val postModel = PostMapper.toModel(it)
+                    val hasLiked = LikesTable
+                        .select { LikesTable.postId.eq(postModel.id!!) and LikesTable.userId.eq(userId) }
+                        .count() > 0
+                    postModel.copy(hasLiked = hasLiked)
                 }.toList()
         }
         return flowOf(

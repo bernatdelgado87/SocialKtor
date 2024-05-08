@@ -59,7 +59,7 @@ fun Route.socialRoute() {
                 val offset: String? = call.request.queryParameters["offset"]
 
                 val repository: MultimediaPostRepository = MultimediaPostRepositoryImpl()
-                repository.getFeed(n?.toInt() ?: LIMIT, offset?.toLong() ?: 0).collect {
+                repository.getFeed(userLogged.toInt(), n?.toInt() ?: LIMIT, offset?.toLong() ?: 0).collect {
                     call.respond(it)
                 }
             }
