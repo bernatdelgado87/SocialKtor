@@ -6,5 +6,5 @@ data class Question (
     val id: Int,
     val textQuestion: String,
     val textAnswer: String,
-    val comments: Comment? = null
+    val comments: CommentModel? = null
     )

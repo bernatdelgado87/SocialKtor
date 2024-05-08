@@ -1,6 +1,6 @@
 package com.example.data.application.datasource.local.db
 
-import com.example.data.entity.Comments
+import com.example.data.entity.CommentsTable
 import com.example.data.entity.LikesTable
 import com.example.data.entity.UserTable
 import com.example.data.entity.social.MultimediaPostTable
@@ -28,7 +28,7 @@ class DataBaseFactory(private val db: Database) {
         // Create used tables
         transaction {
             SchemaUtils.create(
-                Comments,
+                CommentsTable,
                 MultimediaPostTable,
                 LikesTable,
                 UserTable

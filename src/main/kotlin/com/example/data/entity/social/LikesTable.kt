@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.jodatime.datetime
 private const val TABLE_NAME = "likes"
 
 object LikesTable : IntIdTable(name = TABLE_NAME) {
-    val userId = integer("userId").references(MultimediaPostTable.id, onDelete = ReferenceOption.CASCADE)
+    val userId = integer("userId").references(UserTable.id, onDelete = ReferenceOption.CASCADE)
     val postId = integer("postIdRef").references(MultimediaPostTable.id, onDelete = ReferenceOption.CASCADE)
     val createTime = datetime("create_time")
 }

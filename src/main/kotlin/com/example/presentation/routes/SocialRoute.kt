@@ -1,16 +1,14 @@
 package com.example.presentation.routes
 
 import com.example.application.plugins.AuthType
-import com.example.data.application.executor.JobCoroutine
 import com.example.data.repository.LikeAndCommentsRepositoryImpl
 import com.example.data.repository.MultimediaPostRepositoryImpl
 import com.example.domain.repository.MultimediaPostRepository
-import com.example.domain.usecase.GetAllPostsFromUserUseCase
-import com.example.domain.usecase.GetDetailPostUseCase
-import com.example.domain.usecase.LikePostUseCase
+import com.example.presentation.entity.CommentDTO
 import com.example.presentation.entity.LikeDTO
 import io.ktor.application.*
 import io.ktor.auth.*
+import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -66,44 +64,47 @@ fun Route.socialRoute() {
                 }
             }
 
-            get("/") {
-                val userLogged = call.principal<UserIdPrincipal>()!!.name
+            get("/detail") {
                 val postId: String? = call.request.queryParameters["postId"]
-                val userId: String? = call.request.queryParameters["userId"]
+                val userIdRequested: String? = call.request.queryParameters["userId"]
+                val n = call.request.queryParameters["n"]
+                val offset = call.request.queryParameters["offset"]
+                val user = call.principal<UserIdPrincipal>()!!.name
 
                 if (postId != null) {
-                    val getDetailPostUseCase =
-                        GetDetailPostUseCase()
-                    getDetailPostUseCase(GetDetailPostUseCase.Input(postId.toInt())).collect() {
+                    LikeAndCommentsRepositoryImpl().getComments(user.toInt(), postId.toInt(), n!!.toInt(), offset!!.toLong()).collect() {
                         call.respond(it)
                     }
-                } else if (userId != null) {
-                    val getAllPostsFromUserUseCase =
-                        GetAllPostsFromUserUseCase()
-                    getAllPostsFromUserUseCase(GetAllPostsFromUserUseCase.Input(userId)).collect() {
+                } else if (userIdRequested != null) {
+                    MultimediaPostRepositoryImpl().getAllPostsFromUser(userIdRequested.toInt()).collect() {
                         call.respond(it)
                     }
                 } else {
-
+                    call.respond(HttpStatusCode.BadRequest, "Not postId or userId sent")
                 }
 
             }
 
-            route("/like") {
-                post("/") {
-                    val userLogged = call.principal<UserIdPrincipal>()!!.name
-                    val likePostUseCase =
-                        LikePostUseCase(
-                            LikeAndCommentsRepositoryImpl(),
-                            JobCoroutine()
-                        )
-                    val data = call.receive<LikeDTO>()
+            post("/like") {
+                val userLogged = call.principal<UserIdPrincipal>()!!.name
+                val data = call.receive<LikeDTO>()
 
-                    val postId = data.postReference
+                val postId = data.postReference
 
-                    likePostUseCase(LikePostUseCase.Input(userLogged.toInt(), postId)).collect() {
-                        call.respond(it)
-                    }
+                LikeAndCommentsRepositoryImpl().publishLike(userLogged.toInt(), postId).collect() {
+                    call.respond(it)
+                }
+            }
+
+            post("/comment") {
+                val userLogged = call.principal<UserIdPrincipal>()!!.name
+                val data = call.receive<CommentDTO>()
+
+                val postId = data.postReference
+                val comment = data.text
+
+                LikeAndCommentsRepositoryImpl().publishComment(userLogged.toInt(), postId, comment).collect() {
+                    call.respond(it)
                 }
             }
 

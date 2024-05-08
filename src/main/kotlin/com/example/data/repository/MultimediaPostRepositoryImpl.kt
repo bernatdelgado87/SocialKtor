@@ -11,6 +11,7 @@ import com.example.data.entity.mapper.PostMapper
 import com.example.data.entity.social.MultimediaPostTable
 import com.example.domain.commons.aws.Aws3Client
 import com.example.domain.commons.aws.Bucket
+import com.example.domain.model.CommentModel
 import com.example.domain.model.LikeSimplifiedModel
 import com.example.domain.model.MultimediaFeed
 import com.example.domain.model.MultimediaModel
@@ -53,19 +54,6 @@ class MultimediaPostRepositoryImpl : MultimediaPostRepository {
                 true //fixme!! control pagination
             )
         )
-    }
-
-    override fun getDetailPost(idPost: Int): Flow<MultimediaModel> {
-        //todo pending test
-        val transaction = transaction {
-            MultimediaPostTable
-                .leftJoin(UserTable)
-                .select { MultimediaPostTable.id eq idPost }
-                .groupBy({ it [MultimediaPostTable.id] })
-                .toList().first()
-            }
-
-        return flowOf(PostDetailMapper.toModel(transaction.second.first()))
     }
 
     override suspend fun getFeed(n: Int, offset: Long): Flow<MultimediaFeed> {

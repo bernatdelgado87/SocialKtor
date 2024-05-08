@@ -1,5 +1,6 @@
 package com.example.domain.repository
 
+import com.example.domain.model.CommentModel
 import com.example.domain.model.MultimediaFeed
 import com.example.domain.model.MultimediaModel
 import io.ktor.application.*
@@ -9,8 +10,6 @@ import java.io.InputStream
 interface MultimediaPostRepository {
 
     fun getAllPostsFromUser(userId: Int, start: Int = 0, end: Long = 20): Flow<MultimediaFeed>
-
-    fun getDetailPost(idPost: Int): Flow<MultimediaModel>
 
     fun publishMultimediaPost(
         userId: Int,
