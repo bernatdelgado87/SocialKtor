@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LikeDTO (
     val userId: String,
-    val postReference: Int)
+    val postReference: Int,
+    val like: Boolean = true)

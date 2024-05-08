@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface LikeAndCommentsRepository {
 
-    fun publishLike(userId: Int, postId: Int): Flow<LikeModel>
+    fun publishLike(userId: Int, postId: Int, like: Boolean): Flow<LikeModel>
+
     suspend fun publishComment(userId: Int, postId: Int, comment: String, commentReference: Int? = null): Flow<CommentWrapperResponse>
 
     fun getComments(userId: Int, postId: Int, n: Int, offset: Long): Flow<CommentWrapperResponse>
