@@ -5,10 +5,15 @@ val exposedVersion: String by project
 val mysqlDatabaseVersion: String by project
 val commonsEmailVersion: String by project
 
+project.setProperty("mainClassName", "com.example.application.ApplicationKt")
+
+
 plugins {
     application
     kotlin("jvm") version "1.5.31"
     kotlin("plugin.serialization") version "1.5.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
+
 }
 
 group = "com.example"

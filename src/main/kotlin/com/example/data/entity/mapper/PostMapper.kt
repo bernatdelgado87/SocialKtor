@@ -21,5 +21,12 @@ class PostMapper() {
             numberOfLikes = row[MultimediaPostTable.numberOfLikes],
             numberOfComments = row[MultimediaPostTable.numberOfComments]
         )
+
+        fun toDetailPostModel(row: ResultRow): MultimediaModel = MultimediaModel(
+            id = row[MultimediaPostTable.id].value,
+            relativeUrl = row[MultimediaPostTable.url],
+            description = row[MultimediaPostTable.description]
+
+        )
     }
 }

@@ -1,6 +1,8 @@
 package com.example.data.repository
 
 import com.example.data.entity.*
+import com.example.data.entity.mapper.PostDetailMapper
+import com.example.data.entity.mapper.PostMapper
 import com.example.data.entity.social.MultimediaPostTable
 import com.example.domain.model.CommentModel
 import com.example.domain.model.CommentWrapperResponse
@@ -68,6 +70,16 @@ class LikeAndCommentsRepositoryImpl : LikeAndCommentsRepository {
     }
 
     override fun getComments(user: Int, postId: Int, n: Int, offset: Long): Flow<CommentWrapperResponse> {
+        val post = transaction {
+            MultimediaPostTable
+                .leftJoin(UserTable)
+                .select { MultimediaPostTable.id eq postId }
+                .map {
+                    PostMapper.toModel(it)
+                }
+        }
+
+
         val userImage = transaction {
             UserTable
                 .select { UserTable.id eq user }
@@ -85,7 +97,7 @@ class LikeAndCommentsRepositoryImpl : LikeAndCommentsRepository {
                     CommentsMapper.toModel(it)
                 }
         }
-        return flowOf(CommentWrapperResponse(userImage!!, comments))
+        return flowOf(CommentWrapperResponse(post.first(), userImage!!, comments))
     }
 }
 

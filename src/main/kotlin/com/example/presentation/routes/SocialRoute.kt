@@ -91,7 +91,11 @@ fun Route.socialRoute() {
 
                 val postId = data.postReference
 
-                LikeAndCommentsRepositoryImpl().publishLike(userLogged.toInt(), postId, data.like).collect() {
+                LikeAndCommentsRepositoryImpl().publishLike(
+                    userIdParam = userLogged.toInt(),
+                    postIdParam = postId,
+                    like = data.like
+                ).collect() {
                     call.respond(it)
                 }
             }

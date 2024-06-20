@@ -4,7 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CommentWrapperResponse(
-    val imageUrl: String,
+    val multimediaModel: MultimediaModel,
+    val userImageUrl: String,
     val comments: List<CommentModel>
 )
 
