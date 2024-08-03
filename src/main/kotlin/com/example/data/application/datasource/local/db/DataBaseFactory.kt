@@ -27,7 +27,7 @@ class DataBaseFactory(private val db: Database) {
 
         // Create used tables
         transaction {
-            SchemaUtils.create(
+            SchemaUtils.createMissingTablesAndColumns(
                 CommentsTable,
                 MultimediaPostTable,
                 LikesTable,

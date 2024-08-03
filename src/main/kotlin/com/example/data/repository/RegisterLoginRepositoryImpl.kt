@@ -18,29 +18,62 @@ import kotlinx.coroutines.flow.flowOf
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 import java.io.InputStream
 
 class RegisterLoginRepositoryImpl() : RegisterLoginRepository {
     override suspend fun register(
-        name: String,
-        email: String,
-        password: String,
-        photo: InputStream,
-        extension: String,
+        apikey: String,
+        name: String?,
+        email: String?,
+        password: String?,
+        photo: InputStream?,
+        extension: String?,
         application: Application
     ): Flow<UserModel> {
         //TODO return specific error when user exists!
 
+        val encryptedPass = password?.let {BCrypt.hashpw(password, BCrypt.gensalt())}
+        val nameInServer = photo?.let { "social/profile/$name" + getTimeMillis() + ".$extension"}
+
+        val result = photo?.let {Aws3Client(application).s3client.putObject(
+            PutObjectRequest(
+                Bucket.bucket,
+                nameInServer,
+                photo,
+                ObjectMetadata()
+            ).withCannedAcl(CannedAccessControlList.PublicRead)
+        ) }
+
+            if (transaction {
+                    UserTable.insert {insert ->
+                        name?.let { insert[UserTable.name] = name }
+                        email?.let { insert[UserTable.email] = email}
+                        encryptedPass?.let {insert[UserTable.password] = encryptedPass }
+                        nameInServer?.let { insert[profileImage] = nameInServer }
+                        insert[UserTable.apikey] = apikey
+                        insert[createTime] = DateTime.now()
+                    }
+                }.resultedValues!!.isNotEmpty()) {
+                return flowOf(UserModel(name = name, apikey = apikey))
+            } else {
+                throw Exception("Error uploading file")
+            }
+        throw Exception("Error uploading file")
+    }
+
+    override suspend fun update(
+        userId: Int,
+        name: String,
+        email: String?,
+        password: String?,
+        photo: InputStream,
+        extension: String,
+        application: Application
+    ): Flow<UserModel> {
         val encryptedPass = BCrypt.hashpw(password, BCrypt.gensalt())
-
-        var randomApiKey = java.util.UUID.randomUUID().toString()
-        while (randomApiKey.length < 36) {
-            randomApiKey += java.util.UUID.randomUUID().toString()
-        }
-        randomApiKey = randomApiKey.substring(0, 36)
-
         val nameInServer = "social/profile/$name" + getTimeMillis() + ".$extension"
 
         val result = Aws3Client(application).s3client.putObject(
@@ -53,20 +86,16 @@ class RegisterLoginRepositoryImpl() : RegisterLoginRepository {
         )
 
         if (result != null) {
-            if (transaction {
-                    UserTable.insert {
-                        it[UserTable.name] = name
-                        it[UserTable.email] = email
-                        it[UserTable.password] = encryptedPass
-                        it[profileImage] = nameInServer
-                        it[apikey] = randomApiKey
-                        it[createTime] = DateTime.now()
-                    }
-                }.resultedValues!!.isNotEmpty()) {
-                return flowOf(UserModel(name = name, apikey = randomApiKey))
-            } else {
-                throw Exception("Error uploading file")
+            transaction {
+                UserTable.update({ UserTable.id eq userId }) { update ->
+                    update[UserTable.name] = name
+                    email?.let { update[UserTable.email] = email }
+                    password?.let { update[UserTable.password] = encryptedPass }
+                    update[profileImage] = nameInServer
+                    update[createTime] = DateTime.now()
+                }
             }
+            return flowOf(UserModel(name = name))
         }
         throw Exception("Error uploading file")
     }
